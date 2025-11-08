@@ -1,8 +1,10 @@
 // frontend/src/panels/IwiPortalPanel.jsx
 // Iwi Portal UI - OCR, Translation, Archive, Ingest
+// Integrated with Te Puna public schema for archive structure awareness
 
 import React, { useState, useEffect } from "react";
 import { useIwiPortal } from "../hooks/useIwiPortal";
+import publicSchema from "../data/public_schema_te_puna.json";
 
 const IwiPortalPanel = () => {
     const [activeTab, setActiveTab] = useState("ocr");
@@ -109,8 +111,8 @@ const IwiPortalPanel = () => {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-4 py-2 font-semibold uppercase text-sm transition ${activeTab === tab
-                                ? "text-green-400 border-b-2 border-green-400"
-                                : "text-gray-400 hover:text-gray-200"
+                            ? "text-green-400 border-b-2 border-green-400"
+                            : "text-gray-400 hover:text-gray-200"
                             }`}
                     >
                         {tab === "ocr" && "📷 OCR"}
@@ -214,6 +216,19 @@ const IwiPortalPanel = () => {
                         <h2 className="text-xl font-bold text-white mb-4">
                             📚 Te Puna Archive (Read-Only)
                         </h2>
+                        
+                        {/* Schema Info */}
+                        <div className="mb-6 p-3 bg-gray-900 rounded border border-gray-600 text-xs text-gray-300">
+                            <p className="font-bold text-green-300 mb-2">🪶 Archive Tables Available:</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {Object.entries(publicSchema.tables || {}).map(([tableName, tableInfo]) => (
+                                    <div key={tableName} className="text-gray-400">
+                                        <span className="text-green-400 font-mono">{tableName}</span>
+                                        <span className="text-gray-500"> ({tableInfo.column_count} fields)</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
                         {loading ? (
                             <p className="text-gray-400">Loading archive...</p>
