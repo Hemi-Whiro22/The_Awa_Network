@@ -24,8 +24,8 @@ WORKDIR /app
 # Copy backend files
 COPY backend/requirements.txt .
 
-# Install dependencies (upgrade pip to avoid build issues)
-RUN pip install --upgrade pip && \
+# Install dependencies with upgraded pip, setuptools, wheel
+RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt
 
 # Copy the rest of your code
@@ -34,5 +34,9 @@ COPY backend .
 # Expose FastAPI port
 EXPOSE 8000
 
-# Run the app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the app with auto-reload disabled for production
+CMD ["uvicorn", "core.main:app", "--host", "0.0.0.0", "--port", "8000"]
