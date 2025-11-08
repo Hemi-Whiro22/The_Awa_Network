@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings, Field
 
 from .env_loader import load_env
 
@@ -16,17 +15,16 @@ _env_state = load_env()
 class Settings(BaseSettings):
     """Application settings sourced from validated environment variables."""
 
-    model_config = {
-        "protected_namespaces": (),
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-    }
-
     supabase_url: str = Field(alias="DEN_URL")
     supabase_service_role_key: str = Field(alias="DEN_API_KEY")
-    supabase_anon_key: str | None = Field(default=None, alias="TEPUNA_API_KEY")
-    supabase_publishable_key: str | None = Field(default=None, alias="TEPUNA_URL")
+    supabase_anon_key: Optional[str] = Field(default=None, alias="TEPUNA_API_KEY")
+    supabase_publishable_key: Optional[str] = Field(default=None, alias="TEPUNA_URL")
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        allow_population_by_field_name = True
 
     lang: str = "mi_NZ.UTF-8"
     lc_all: str = "mi_NZ.UTF-8"
