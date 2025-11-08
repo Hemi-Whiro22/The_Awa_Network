@@ -631,3 +631,26 @@ SELECT schema_name, has_schema_privilege('postgres', schema_name, 'USAGE') AS ha
  vault               | t
  whiro               | t
 (51 rows)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Quick check both connect:
+psql "$TEPUNA_URL" -c '\conninfo'
+psql "$DEN_URL"    -c '\conninfo'
+You are connected to database "postgres" as user "postgres" on host "db.ruqejtkudezadrqbdodx.supabase.co" (address "13.210.185.240") at port "5432".
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off, ALPN: postgresql)
+psql: error: connection to server at "db.fyrzttjlvofmcfxibtpi.supabase.co" (34.199.60.90), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+connection to server at "db.fyrzttjlvofmcfxibtpi.supabase.co" (34.199.60.90), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+hemi-whiro@hemi-whiro-B150M-D3H:~$ 
+

@@ -1,27 +1,38 @@
-FROM python:3.11-slim
+# Use official lightweight Python image
+FROM python:3.13-slim
 
-# Setup locale support early
-RUN apt-get update && apt-get install -y locales \
-    && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
-    && echo "mi_NZ.UTF-8 UTF-8" >> /etc/locale.gen \
-    && locale-gen \
-    && apt-get clean \
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    LC_ALL=en_NZ.UTF-8 \
+    LANG=en_NZ.UTF-8
+
+# Install system packages needed by Pillow & PostgreSQL
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libjpeg-dev \
+    zlib1g-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    locales \
+    && locale-gen en_NZ.UTF-8 \
     && rm -rf /var/lib/apt/lists/*
-
-# Set locale environment variables (fallback to en_US if mi_NZ not available)
-ENV LANG=mi_NZ.UTF-8
-ENV LC_ALL=mi_NZ.UTF-8
-ENV LANGUAGE=mi_NZ:en_US
 
 # Set working directory
 WORKDIR /app
 
-# Copy and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy backend files
+COPY backend/requirements.txt .
 
-# Copy application code and environment configuration
-COPY . /app
+# Install dependencies (upgrade pip to avoid build issues)
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
 
+# Copy the rest of your code
+COPY backend .
+
+# Expose FastAPI port
 EXPOSE 8000
+
+# Run the app
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
