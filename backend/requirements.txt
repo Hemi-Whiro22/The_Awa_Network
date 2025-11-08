@@ -6,7 +6,7 @@ pytesseract==0.3.13
 openai==1.28.0
 supabase==2.4.0
 psycopg[binary]==3.1.18
-pydantic==2.6.4
+pydantic==2.5.3
 pydantic-settings==2.2.1
 rich==13.7.0
 typer==0.12.0
