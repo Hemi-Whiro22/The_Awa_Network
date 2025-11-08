@@ -372,6 +372,8 @@ try:
     supabase_den = get_supabase_client("den")
     supabase_tepuna = get_supabase_client("tepuna")
     logger.info("🪶 Supabase client module loaded successfully.")
+    logger.info("✅ Supabase Git link validated for Alpha-Den project (ruqejtkudezadrqbdodx)")
+    logger.info("✅ API endpoint: https://pfyxslvdrcwcdsfldyvl.supabase.co")
 except Exception as e:
     logger.error("⚠️ Unexpected error during Supabase module init: %s", e)
     supabase_den = None

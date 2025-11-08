@@ -1,0 +1,29 @@
+# Supabase configuration for Alpha-Den project (DEN)
+# Project ID: ruqejtkudezadrqbdodx
+# API: https://pfyxslvdrcwcdsfldyvl.supabase.co
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[realtime]
+enabled = true
+
+[studio]
+port = 54323
+enabled = true
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://tiwhanawhana-backend.onrender.com"]
+jwt_expiry = 3600
+
+[storage]
+file_size_limit = 52428800
