@@ -1,0 +1,9 @@
+{
+    "carver_active": true,
+    "last_manifest": "manifest.yaml",
+    "last_backup": "2025-11-05T00:00:00Z",
+    "supabase_status": "connected",
+    "render_backend": "deployed",
+    "openai_credit_remaining": 100,
+    "sync_status": "stable"
+}

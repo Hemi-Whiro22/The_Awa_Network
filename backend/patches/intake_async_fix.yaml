@@ -1,0 +1,59 @@
+target: backend/routes/tiwhanawhana/intake.py
+summary: "Wrap async intake processors so BackgroundTasks executes schedulers that spawn create_task coroutines within the event loop."
+rationale:
+  - "BackgroundTasks executes synchronous callables; passing async functions prevents document processing."
+  - "Using asyncio.create_task from a synchronous wrapper keeps behaviour nonblocking without restructuring the route."
+implementation_plan:
+  steps:
+    - "Within each endpoint, keep the async processor functions but add synchronous wrappers that call asyncio.create_task."
+    - "Register the wrappers with background_tasks.add_task instead of the raw async coroutine."
+    - "Include logging inside wrappers for visibility when tasks are scheduled."
+proposed_diff: |
+  @@
+       # Process in background
+  -    async def process_all():
+  +    async def process_all():
+           for doc in documents:
+               result = await bridge.process_document(doc)
+               if result["status"] == "processed":
+                   bridge.request_whiro_audit(
+                       result["record"]["id"],
+                       result["record"]["full_content"]
+                   )
+  -    
+  -    background_tasks.add_task(process_all)
+  +
+  +    def schedule_process_all():
+  +        logger.info("Scheduling intake processing for %s document(s)", len(documents))
+  +        asyncio.create_task(process_all())
+  +
+  +    background_tasks.add_task(schedule_process_all)
+  @@
+       # Process in background
+  -    async def process_task():
+  +    async def process_task():
+           result = await bridge.process_document(doc_info)
+           if result["status"] == "processed":
+               bridge.request_whiro_audit(
+                   result["record"]["id"],
+                   result["record"]["full_content"]
+               )
+  -    
+  -    background_tasks.add_task(process_task)
+  +
+  +    def schedule_process_one():
+  +        logger.info("Scheduling intake processing for %s", document_name)
+  +        asyncio.create_task(process_task())
+  +
+  +    background_tasks.add_task(schedule_process_one)
+  @@
+       # Add to background tasks
+  -    background_tasks.add_task(bridge.run_intake_loop, interval_seconds=30)
+  +    def schedule_continuous_loop():
+  +        logger.info("Scheduling continuous intake scan (every %s s)", 30)
+  +        asyncio.create_task(bridge.run_intake_loop(interval_seconds=30))
+  +
+  +    background_tasks.add_task(schedule_continuous_loop)
+notes:
+  - "create_task relies on the running event loop; BackgroundTasks executes wrappers in the main worker thread so scheduling remains valid."
+  - "Further resilience (exception capture or task registry) can be layered after stakeholder approval."

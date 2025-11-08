@@ -1,0 +1,83 @@
+target: backend/services/core/main.py
+summary: "Elevate core template to Render-ready FastAPI service with health endpoints, UTF-8 enforcement, and Supabase schema ping."
+rationale:
+  - "Render microservices should share a consistent bootstrap pattern."
+  - "Core service acts as source template for OCR/Translate/etc builds."
+implementation_plan:
+  steps:
+    - "Import logging, asyncio, and middleware helpers."
+    - "Instantiate FastAPI with title/version metadata."
+    - "Apply UTF-8 middleware via backend/utils/middleware/utf8_enforcer.py once implemented."
+    - "Define /health (lightweight) and /status (detailed) routes."
+    - "Add startup event that attempts Supabase schema touch via utils.supabase_client (if available) and writes to logs." 
+    - "Ensure locale env vars default to mi_NZ.UTF-8."
+proposed_diff: |
+  @@
+-# core/main.py: Orchestrator API for Tiwhanawhana
+-
+-from fastapi import FastAPI
+-
+-app = FastAPI()
+-
+-@app.get("/status")
+-def read_status():
+-    return {"status": "awake", "kaitiaki": "Tiwhanawhana"}
+-
+-@app.get("/test")
+-def read_test():
+-    return "pong"
+-    # Placeholder for any additional reflection logic
+-
+-# Additional routes and logic can be added as required
++"""Render-ready core service skeleton for Tiwhanawhana microservices."""
++
++from __future__ import annotations
++
++import asyncio
++import logging
++import os
++from datetime import datetime, timezone
++
++from fastapi import FastAPI
++
++from utils.logger import get_logger
++from utils.supabase_client import supabase
++from utils.middleware.utf8_enforcer import apply_utf8_middleware
++
++logger = get_logger("services.core")
++
++os.environ.setdefault("LANG", "mi_NZ.UTF-8")
++os.environ.setdefault("LC_ALL", "mi_NZ.UTF-8")
++
++app = FastAPI(title="Tiwhanawhana Core Service", version="1.0.0")
++apply_utf8_middleware(app)
++
++
++@app.on_event("startup")
++async def startup_event() -> None:
++    logger.info("🌊 Core service warming up")
++    if supabase is None:
++        logger.warning("Supabase unavailable — running in dry mode")
++        return
++    try:
++        await asyncio.to_thread(
++            supabase.table("rongohia.meta").select("id").limit(1).execute
++        )
++        logger.info("Supabase connectivity verified for core service")
++    except Exception as exc:  # noqa: BLE001
++        logger.warning("Supabase health probe failed: %s", exc)
++
++
++@app.get("/health")
++async def health() -> dict[str, str]:
++    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
++
++
++@app.get("/status")
++async def status() -> dict[str, str]:
++    return {"status": "awake", "kaitiaki": "Tiwhanawhana"}
++
++
++@app.get("/test")
++async def read_test() -> dict[str, str]:
++    return {"message": "pong"}

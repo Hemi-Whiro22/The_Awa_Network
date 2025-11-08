@@ -1,0 +1,150 @@
+targets:
+  - backend/services/ocr/main.py
+  - backend/services/translate/main.py
+  - backend/services/embed/main.py
+  - backend/services/memory/main.py
+  - backend/services/mauri/main.py
+  - backend/services/intake/main.py
+  - backend/services/carver/main.py
+summary: "Scaffold Render microservices under backend/services/{tool}/main.py with consistent UTF-8 enforcement, logging, and Supabase/OpenAI integration."
+rationale:
+  - "Each tool needs an independent FastAPI service for Render deployment."
+  - "Existing OCR stub lacks health endpoints and UTF-8 handling; other tools are missing entirely."
+implementation_plan:
+  common_steps:
+    - "Import FastAPI, typing primitives, async helpers, and shared clients."
+    - "Instantiate logger via utils.logger.get_logger with service-specific names."
+    - "Apply UTF-8 middleware using apply_utf8_middleware helper."
+    - "Define /health and /status endpoints plus tool-specific routes under /api/{tool}."
+    - "On startup, run lightweight Supabase schema validation inside asyncio.to_thread."
+    - "Write operational logs to backend/logs/{tool}_activity.log (handled by logger configuration)."
+  per_service_notes:
+    ocr:
+      - "Expose POST /api/ocr/extract handling image uploads with pytesseract, persisting to Supabase, and optional embedding request."
+    translate:
+      - "Expose POST /api/translate/perform using utils.openai_client.translate_text; persist to Supabase translations table."
+    embed:
+      - "Expose POST /api/embed/create generating embeddings via utils.openai_client + pgvector store."
+    memory:
+      - "Expose POST /api/memory/retrieve and GET /api/memory/records using utils.supabase_client and vector search."
+    mauri:
+      - "Expose POST /api/mauri/log and GET /api/mauri/status leveraging services.tiwhanawhana.log_mauri and Supabase logs." 
+    intake:
+      - "Expose POST /api/intake/scan and GET /api/intake/status delegating to TiwhanawhanaIntakeBridge with background task wrappers." 
+    carving:
+      - "Expose POST /api/carving/render orchestrating OpenAI/Ollama responses and logging to Supabase." 
+proposed_diff_snippets:
+  backend/services/ocr/main.py: |
+    @@
+-# ocr/main.py: OCR processing service using FastAPI and pytesseract
+-
+-from fastapi import FastAPI, UploadFile, File
+-import pytesseract
+-from PIL import Image
+-from io import BytesIO
+-# Import supabase client library
+-
+-app = FastAPI()
+-
+-def extract_text_from_image(file: bytes) -> str:
+-    image = Image.open(BytesIO(file))
+-    return pytesseract.image_to_string(image)
+-
+-@app.post("/ocr")
+-async def ocr_endpoint(file: UploadFile = File(...)):
+-    try:
+-        # Read the file contents
+-        contents = await file.read()
+-        # Extract text using pytesseract
+-        text = extract_text_from_image(contents)
+-        
+-        # Log the result in Supabase (pseudo code)
+-        # supabase_client.log_ocr_result(text)
+-
+-        return {"extracted_text": text}
+-    except Exception as e:
+-        return {"error": str(e)}
++"""Render OCR microservice entrypoint."""
++
++from __future__ import annotations
++
++import asyncio
++from io import BytesIO
++from datetime import datetime, timezone
++
++from fastapi import FastAPI, File, HTTPException, UploadFile
++from fastapi.concurrency import run_in_threadpool
++from PIL import Image, UnidentifiedImageError
++import pytesseract
++
++from utils.logger import get_logger
++from utils.middleware.utf8_enforcer import apply_utf8_middleware
++from utils.supabase_client import insert_record
++
++logger = get_logger("services.ocr")
++
++app = FastAPI(title="Tiwhanawhana OCR Service", version="1.0.0")
++apply_utf8_middleware(app)
++
++
++@app.on_event("startup")
++async def startup_event() -> None:
++    logger.info("🌀 OCR service ready")
++
++
++@app.get("/health")
++async def health() -> dict[str, str]:
++    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
++
++
++@app.post("/api/ocr/extract")
++async def extract_text(file: UploadFile = File(...)) -> dict[str, str]:
++    contents = await file.read()
++    if not contents:
++        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
++    try:
++        text = await run_in_threadpool(_ocr_bytes, contents)
++    except UnidentifiedImageError as exc:
++        raise HTTPException(status_code=400, detail="Invalid image payload.") from exc
++    insert_record("ocr_logs", {"content": text, "metadata": {"filename": file.filename}})
++    return {"text": text}
++
++
++def _ocr_bytes(data: bytes) -> str:
++    with Image.open(BytesIO(data)) as image:
++        return pytesseract.image_to_string(image)
+  backend/services/translate/main.py: |
+    *** Add File: backend/services/translate/main.py
+    +"""Render translate service."""
+    +from __future__ import annotations
+    +
+    +from datetime import datetime, timezone
+    +
+    +from fastapi import FastAPI, HTTPException
+    +from pydantic import BaseModel, Field
+    +
+    +from utils.logger import get_logger
+    +from utils.middleware.utf8_enforcer import apply_utf8_middleware
+    +from utils.openai_client import translate_text
+    +from utils.supabase_client import insert_record
+    +
+    +logger = get_logger("services.translate")
+    +
+    +app = FastAPI(title="Tiwhanawhana Translate Service", version="1.0.0")
+    +apply_utf8_middleware(app)
+    +
+    +class TranslationPayload(BaseModel):
+    +    text: str = Field(..., min_length=1)
+    +    target_language: str = Field(default="te reo Māori")
+    +
+    +@app.post("/api/translate/perform")
+    +async def perform_translation(payload: TranslationPayload) -> dict[str, str]:
+    +    try:
+    +        translated = translate_text(payload.text, payload.target_language)
+    +    except Exception as exc:  # noqa: BLE001
+    +        logger.error("Translation failed: %s", exc)
+    +        raise HTTPException(status_code=502, detail="Translation service unavailable.") from exc
+    +    insert_record("translations", {"content": translated, "metadata": payload.model_dump()})
+    +    return {"translation": translated, "timestamp": datetime.now(timezone.utc).isoformat()}
+notes:
+  - "Analogous snippets for embed/memory/mauri/intake/carver will follow this structure in final patch."

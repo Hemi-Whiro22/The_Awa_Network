@@ -1,0 +1,8 @@
+# backend/services/ruru/requirements.txt
+
+fastapi
+uvicorn
+openai
+supabase
+pytesseract
+Pillow

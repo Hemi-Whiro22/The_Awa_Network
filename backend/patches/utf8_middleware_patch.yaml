@@ -1,0 +1,53 @@
+target: backend/utils/middleware/utf8_enforcer.py
+summary: "Introduce shared UTF-8 / macron enforcement middleware for FastAPI services."
+rationale:
+  - "Render microservices must normalise request bodies to NFC and enforce mi_NZ locale."
+  - "Centralised middleware keeps enforcement consistent across all services."
+implementation_plan:
+  steps:
+    - "Create backend/utils/middleware/utf8_enforcer.py exporting build_utf8_middleware()."
+    - "Middleware performs str normalization (NFC), rejects non-UTF-8 payloads, and sets default locale env vars if unset."
+    - "Provide helper apply_utf8_middleware(app) for convenience."
+    - "Add unit docstring describing Māori macron expectations."
+proposed_diff: |
+  *** Add File: backend/utils/middleware/utf8_enforcer.py
+  +"""Unicode normalisation middleware shared by Tiwhanawhana services."""
+  +from __future__ import annotations
+  +
+  +import locale
+  +import unicodedata
+  +from typing import Awaitable, Callable
+  +
+  +from fastapi import Request, Response
+  +from starlette.middleware.base import BaseHTTPMiddleware
+  +from starlette.types import ASGIApp
+  +
+  +MI_NZ = "mi_NZ.UTF-8"
+  +
+  +def _ensure_locale() -> None:
+  +    if locale.getdefaultlocale()[0] != "mi_NZ":
+  +        try:
+  +            locale.setlocale(locale.LC_ALL, MI_NZ)
+  +        except locale.Error:
+  +            pass
+  +
+  +class UnicodeEnforcerMiddleware(BaseHTTPMiddleware):
+  +    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+  +        if request.headers.get("content-type", "").startswith("text/"):
+  +            body = await request.body()
+  +            try:
+  +                text = body.decode("utf-8")
+  +            except UnicodeDecodeError:
+  +                return Response(status_code=400, content="Payload must be UTF-8 encoded.")
+  +            normalised = unicodedata.normalize("NFC", text)
+  +            request._body = normalised.encode("utf-8")
+  +        _ensure_locale()
+  +        response = await call_next(request)
+  +        response.headers.setdefault("Content-Language", MI_NZ)
+  +        return response
+  +
+  +def apply_utf8_middleware(app: ASGIApp) -> None:
+  +    app.add_middleware(UnicodeEnforcerMiddleware)
+notes:
+  - "FastAPI dependency ensures starlette import; validators can be no-ops if locale missing."
+  - "request._body assignment mirrors Starlette pattern; replace with state wrapper if preferred."

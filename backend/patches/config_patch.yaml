@@ -1,0 +1,45 @@
+target: backend/config.py
+summary: "Add optional Settings fields referenced by downstream modules with safe defaults and documentation."
+rationale:
+  - "utils.openai_client expects translation_model, embedding_model, and offline_mode attributes on settings."
+  - "utils.pgvector_client requires database_url and offline_mode toggles."
+  - "Routes reference supabase_table_* names and memory_table when persisting records."
+  - "OCR pathways look for tesseract_path configuration."
+implementation_plan:
+  steps:
+    - "Extend Settings with optional fields: offline_mode (bool), database_url (str|None), memory_table (str|None)."
+    - "Add supabase_table_ocr_logs, supabase_table_translations, supabase_table_embeddings, supabase_table_memory (all optional with sensible defaults)."
+    - "Provide optional translation_model and embedding_model names with documented defaults."
+    - "Introduce tesseract_path (str|None) to guide pytesseract configuration."
+    - "Document each field with inline comments referencing consumer modules."
+proposed_diff: |
+  @@
+   class Settings(BaseSettings):
+       supabase_url: str
+       supabase_service_role_key: str | None = None
+       supabase_anon_key: str | None = None
+       supabase_publishable_key: str | None = None
+       openai_api_key: str | None = None
+       lang: str = "mi_NZ.UTF-8"
+       lc_all: str = "mi_NZ.UTF-8"
+  +    # --- Optional feature toggles and connection details ---
+  +    offline_mode: bool = False  # utils.openai_client, utils.pgvector_client, offline fallbacks
+  +    database_url: str | None = None  # utils.pgvector_client
+  +    memory_table: str | None = None  # routes.memory, utils.pgvector_client
+  +
+  +    # --- Supabase table aliases consumed by routers ---
+  +    supabase_table_ocr_logs: str = "ocr_logs"
+  +    supabase_table_translations: str = "translations"
+  +    supabase_table_embeddings: str = "embeddings"
+  +    supabase_table_memory: str = "ti_memory"
+  +
+  +    # --- OpenAI model configuration ---
+  +    translation_model: str = "gpt-4o-mini"  # utils.openai_client.translate_text
+  +    embedding_model: str = "text-embedding-3-small"  # utils.openai_client.generate_embedding
+  +
+  +    # --- OCR configuration ---
+  +    tesseract_path: str | None = None  # routes.ocr, services.tiwhanawhana
+ notes:
+  - "Defaults align with current hard-coded fallbacks in routes to avoid behavioural changes."
+  - "Actual model names can be overridden via environment variables when available."
+  - "Ensure python>=3.10 typing remains compatible with existing BaseSettings usage."

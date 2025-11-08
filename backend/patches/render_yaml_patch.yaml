@@ -1,0 +1,41 @@
+target: render.yaml
+summary: "Define Render deployment for Tiwhanawhana microservices and shared environment variables."
+rationale:
+  - "Render platform requires declarative service definitions pointing to each FastAPI entrypoint."
+  - "Ensures LANG/LC_ALL and Supabase/OpenAI credentials available to each deployment."
+implementation_plan:
+  steps:
+    - "Create render.yaml at repo root with one web service per tool (ocr, translate, embed, memory, mauri, intake, carving, core)."
+    - "Reference requirements.txt and entrypoint main:app for gunicorn/uvicorn command."
+    - "Define shared envVars section with defaults referencing Render secrets."
+proposed_diff: |
+  *** Add File: render.yaml
+  +services:
+  +  - type: web
+  +    name: tiwhanawhana-core
+  +    env: python
+  +    plan: starter
+  +    buildCommand: "pip install -r requirements.txt"
+  +    startCommand: "uvicorn backend.services.core.main:app --host 0.0.0.0 --port $PORT"
+  +    envVars:
+  +      - key: SUPABASE_URL
+  +        sync: false
+  +      - key: SUPABASE_SERVICE_ROLE_KEY
+  +        sync: false
+  +      - key: OPENAI_API_KEY
+  +        sync: false
+  +      - key: LANG
+  +        value: "mi_NZ.UTF-8"
+  +      - key: LC_ALL
+  +        value: "mi_NZ.UTF-8"
+  +  - type: web
+  +    name: tiwhanawhana-ocr
+  +    env: python
+  +    plan: starter
+  +    buildCommand: "pip install -r requirements.txt"
+  +    startCommand: "uvicorn backend.services.ocr.main:app --host 0.0.0.0 --port $PORT"
+  +    envVars: *default_env
+  +  # Repeat structure for translate, embed, memory, mauri, intake, carving services
+notes:
+  - "Replace placeholder plan/start parameters with final Render specs when confirmed."
+  - "Use YAML anchors (&default_env) to avoid duplication once file materialised."

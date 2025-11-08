@@ -1,0 +1,56 @@
+{
+  "defaultModel": "codex",
+  "models": {
+    "default": {
+      "provider": "openai",
+      "model": "gpt-5",
+      "apiKey": "YOUR_OPENAI_API_KEY"
+    },
+    "codex": {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "purpose": "coding",
+      "temperature": 0.2
+    },
+    "llama3": {
+      "provider": "ollama",
+      "model": "llama3",
+      "endpoint": "http://localhost:11434",
+      "purpose": "offline"
+    }
+  },
+
+  "tools": {
+    "terminal": {
+      "enabled": true,
+      "defaultShell": "/bin/bash",
+      "safeMode": true,
+      "confirmBeforeDelete": true
+    },
+    "python": {
+      "enabled": true,
+      "virtualEnv": "/home/hemi-whiro/Desktop/tiwhanawhana/backend/.venv/bin/python"
+    },
+    "mcp": {
+      "enabled": true,
+      "endpoint": "http://localhost:5050",
+      "safeMode": true,
+      "confirmBeforeDelete": true,
+      "encoding": "utf-8",
+      "auditLog": "/home/hemi-whiro/Desktop/tiwhanawhana/backend/.mauri/logs/carver_audit.log"
+    }
+  },
+
+  "rules": {
+    "encoding": "utf-8",
+    "neverDeleteWithoutAsk": true,
+    "createBackupsBeforeEdit": true,
+    "verifyChecksumOnSave": true,
+    "logFile": "/home/hemi-whiro/Desktop/tiwhanawhana/backend/.mauri/logs/carver_audit.log"
+  },
+
+  "workspace": {
+    "root": "/home/hemi-whiro/Desktop/tiwhanawhana",
+    "watchFiles": true
+  }
+}

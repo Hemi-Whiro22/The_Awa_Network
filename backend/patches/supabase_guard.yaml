@@ -1,0 +1,71 @@
+target: backend/routes/tiwhanawhana/intake_bridge.py
+summary: "Guard Supabase client creation behind a lazy factory with development fallbacks."
+rationale:
+  - "Module-level create_client call raises during import when credentials are absent."
+  - "Other modules (utils.supabase_client) already expose graceful development-mode behaviour—intake bridge should align."
+implementation_plan:
+  steps:
+    - "Replace global supabase creation with a get_supabase() helper that caches the client."
+    - "Log and return None when credentials are missing, allowing bridge operations to no-op gracefully."
+    - "Update save_to_supabase and downstream calls to check for None and log simulated actions."
+proposed_diff: |
+  @@
+  -from supabase import create_client
+  +from supabase import create_client
+  @@
+  -SUPABASE_URL = os.getenv("SUPABASE_URL")
+  -SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+  -
+  -supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+  +SUPABASE_URL = os.getenv("SUPABASE_URL")
+  +SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+  +
+  +_supabase_client = None
+  +
+  +def get_supabase():
+  +    """Lazy Supabase client loader with development fallback."""
+  +    global _supabase_client
+  +    if _supabase_client is not None:
+  +        return _supabase_client
+  +    if not SUPABASE_URL or not SUPABASE_KEY:
+  +        logger.warning("Supabase credentials missing; intake bridge will run in dry-run mode")
+  +        return None
+  +    try:
+  +        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+  +    except Exception as exc:
+  +        logger.warning("Supabase client creation failed (%s); running in dry-run mode", exc)
+  +        _supabase_client = None
+  +    return _supabase_client
+  @@
+  -def save_to_supabase(table: str, payload: dict):
+  -    try:
+  -        payload["created_at"] = datetime.utcnow().isoformat()
+  -        payload["meta"] = {**RONGOHIA_GLYPH, **payload.get("meta", {})}
+  -        supabase.table(table).insert(payload).execute()
+  -        logger.info(f"💾 Saved to Supabase → {table}")
+  -    except Exception as e:
+  -        logger.error(f"❌ Supabase insert failed ({table}): {e}")
+  +def save_to_supabase(table: str, payload: dict):
+  +    client = get_supabase()
+  +    payload["created_at"] = datetime.utcnow().isoformat()
+  +    payload["meta"] = {**RONGOHIA_GLYPH, **payload.get("meta", {})}
+  +    if client is None:
+  +        logger.info("(dry-run) Would save to %s: %s", table, payload)
+  +        return
+  +    try:
+  +        client.table(table).insert(payload).execute()
+  +        logger.info("💾 Saved to Supabase → %s", table)
+  +    except Exception as e:
+  +        logger.error("❌ Supabase insert failed (%s): %s", table, e)
+  @@
+  -        save_to_supabase("rongohia.artifacts", {
+  +        save_to_supabase("rongohia.artifacts", {
+  @@
+  -        save_to_supabase("task_queue", payload)
+  +        save_to_supabase("task_queue", payload)
+  @@
+  -        save_to_supabase("rongohia.meta", heartbeat)
+  +        save_to_supabase("rongohia.meta", heartbeat)
+notes:
+  - "Dry-run mode mirrors utils.supabase_client logging and keeps ingest flow functional without remote credentials."
+  - "Further refactors (sharing the existing supabase_client helper) can be explored after approval."

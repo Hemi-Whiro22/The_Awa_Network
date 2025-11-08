@@ -1,0 +1,34 @@
+{
+  "tools": {
+    "supabase": {
+      "endpoint": "https://ruqejtkudezadrqbdodx.supabase.co",
+      "service_key": "sb_secret_SO-_CLOqSy8R5Y0xGWiIzQ_b1ycYnkW",
+      "schemas": [
+        "kitenga",
+        "rongohia",
+        "rongokarere",
+        "whiro",
+        "aotahi",
+        "hinewai",
+        "whaitiri",
+        "te_rongo",
+        "tawhaki",
+        "mataroa",
+        "mirrora"
+      ]
+    },
+    "local_db": {
+      "host": "localhost",
+      "database": "mcp_local",
+      "user": "mcp_admin",
+      "password": "mcp_password",
+      "local_db_port": 5432
+    }
+  },
+  "servers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=ruqejtkudezadrqbdodx"
+    }
+  }
+}
