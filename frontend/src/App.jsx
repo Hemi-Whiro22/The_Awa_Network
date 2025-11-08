@@ -1,6 +1,7 @@
 import OCRPanel from "./panels/OCRPanel.jsx";
 import TranslatePanel from "./panels/TranslatePanel.jsx";
 import MemoryPanel from "./panels/MemoryPanel.jsx";
+import IwiPortalPanel from "./panels/IwiPortalPanel.jsx";
 import koruIcon from "./assets/koru_spiral.svg";
 
 function App() {
@@ -21,6 +22,9 @@ function App() {
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-6 px-6 py-10 md:grid-cols-2">
+        <section className="md:col-span-2">
+          <IwiPortalPanel />
+        </section>
         <section className="md:col-span-2">
           <OCRPanel />
         </section>
