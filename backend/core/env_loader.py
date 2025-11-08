@@ -115,11 +115,12 @@ def load_env() -> dict[str, Any]:
 
     if missing_keys:
         _log_validation(loaded_keys, missing_keys, utf8_status, utf8_verified, masked_preview)
-        raise RuntimeError(
-            "Missing required environment variables: " + ", ".join(missing_keys)
+        logger.warning(
+            "Missing environment variables: %s (continuing with defaults)", ", ".join(missing_keys)
         )
-
-    logger.info("Loaded environment keys: %s", masked_preview)
+    else:
+        logger.info("Loaded environment keys: %s", masked_preview)
+    
     logger.info("Locale configuration: %s", utf8_status)
     logger.info("UTF-8 verified: %s", utf8_verified)
 
