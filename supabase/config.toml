@@ -1,6 +1,6 @@
-# Supabase configuration for Alpha-Den project (DEN)
-# Project ID: ruqejtkudezadrqbdodx
-# API: https://pfyxslvdrcwcdsfldyvl.supabase.co
+# Supabase Dual-Project Configuration
+# Alpha-Den (operational): ruqejtkudezadrqbdodx
+# Te Puna (archive, read-only): fyrzttjlvofmcfxibtpi
 
 [api]
 enabled = true
@@ -27,3 +27,23 @@ jwt_expiry = 3600
 
 [storage]
 file_size_limit = 52428800
+
+# === DUAL PROJECT CONFIGURATION ===
+
+[projects]
+# Alpha-Den: Operational stack (write-enabled)
+[projects.alpha_den]
+project_ref = "ruqejtkudezadrqbdodx"
+url = "https://pfyxslvdrcwcdsfldyvl.supabase.co"
+description = "Operational data hub for Tiwhanawhana"
+region = "us-east-1"
+access_level = "write"
+
+# Te Puna: Iwi knowledge archive (read-only)
+[projects.te_puna]
+project_ref = "fyrzttjlvofmcfxibtpi"
+url = "https://fyrzttjlvofmcfxibtpi.supabase.co"
+description = "Iwi knowledge archive and summaries"
+region = "us-east-1"
+access_level = "read"
+rls_enforced = true

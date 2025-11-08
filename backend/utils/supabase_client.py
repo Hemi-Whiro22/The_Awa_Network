@@ -22,6 +22,7 @@ logger = get_logger(__name__)
 # Cache clients to avoid recreating
 _den_client: Optional[Client] = None
 _tepuna_client: Optional[Client] = None
+_tepuna_read_only: bool = True  # Te Puna is read-only (iwi knowledge archive)
 
 
 @dataclass
@@ -374,6 +375,8 @@ try:
     logger.info("🪶 Supabase client module loaded successfully.")
     logger.info("✅ Supabase Git link validated for Alpha-Den project (ruqejtkudezadrqbdodx)")
     logger.info("✅ API endpoint: https://pfyxslvdrcwcdsfldyvl.supabase.co")
+    logger.info("🪶 Connected to Alpha-Den (write) and Te Puna (read-only) Supabase projects.")
+    logger.info("🔐 Te Puna (fyrzttjlvofmcfxibtpi) configured as read-only iwi knowledge archive.")
 except Exception as e:
     logger.error("⚠️ Unexpected error during Supabase module init: %s", e)
     supabase_den = None

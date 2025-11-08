@@ -11,6 +11,7 @@ from backend.core.config import get_settings, get_settings_summary
 from backend.core.env_loader import load_env
 from backend.routes import embed, memory, ocr, translate
 from backend.routes.tiwhanawhana import intake, mauri
+from backend.routes import iwi_portal
 from backend.utils.env_validator import validate_environment_and_locale
 from backend.utils.logger import get_logger
 from backend.utils.middleware.utf8_enforcer import apply_utf8_middleware
@@ -35,6 +36,7 @@ app.include_router(translate.router, prefix="/translate", tags=["Translate"])
 app.include_router(embed.router, prefix="/embed", tags=["Embed"])
 app.include_router(memory.router, prefix="/memory", tags=["Memory"])
 app.include_router(mauri.router, prefix="/mauri", tags=["Mauri"])
+app.include_router(iwi_portal.router, prefix="/iwi", tags=["Iwi Portal"])
 app.include_router(intake.router, tags=["Intake"])
 
 
