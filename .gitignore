@@ -18,6 +18,7 @@ __pycache__/
 backend/.env
 backend/kaitiaki-intake/
 documents/json/audit_logs/
+documents/wtf.json
 documents/json/elder_reviews/
 logs/
 
