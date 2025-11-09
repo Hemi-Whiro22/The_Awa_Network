@@ -1,0 +1,51 @@
+# render.yaml — Tiwhanawhana Orchestrator Deployment (Te-Po Realm)
+
+services:
+  - type: web
+    name: tiwhanawhana-backend
+    env: python
+    plan: starter
+    region: oregon
+
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r Te_Po/requirements.txt
+
+    startCommand: uvicorn Te_Po.core.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+
+    envVars:
+      - key: DEN_URL
+        sync: false
+      - key: DEN_API_KEY
+        sync: false
+      - key: TEPUNA_URL
+        sync: false
+      - key: TEPUNA_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
+      - key: EMBEDDING_MODEL
+        value: text-embedding-3-large
+      - key: OCR_MODEL
+        value: gpt-4o
+      - key: TRANSLATION_MODEL
+        value: gpt-4o-mini
+      - key: LANG
+        value: mi_NZ.UTF-8
+      - key: LC_ALL
+        value: mi_NZ.UTF-8
+      - key: TZ
+        value: Pacific/Auckland
+      - key: APP_NAME
+        value: tiwhanawhana
+      - key: APP_ENV
+        value: production
+      - key: APP_ENCODING
+        value: utf-8
+      - key: APP_LOCALE
+        value: mi_NZ.UTF-8
+      - key: CORS_ORIGINS
+        value: "*"
