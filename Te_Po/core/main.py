@@ -54,6 +54,13 @@ async def startup_event() -> None:
 async def health_check() -> dict[str, str]:
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+@app.post("/kitenga/hook")
+async def kitenga_hook(req: Request):
+    """Receives MCP prompts or internal messages from ChatGPT."""
+    payload = await req.json()
+    # Route to Packwatch handler or Supabase logger
+    response = await handle_packwatch(payload)
+    return response
 
 @app.get("/env/health")
 async def env_health() -> dict[str, object]:
