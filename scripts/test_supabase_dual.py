@@ -198,7 +198,7 @@ def test_fastapi_integration():
     
     try:
         # Import the main app to verify it boots with the keys
-        from Te_Po.core.main import app
+        from te_po.core.main import app
         print("   ✓ backend.core.main loaded successfully")
         
         # Check if the app has the expected routes

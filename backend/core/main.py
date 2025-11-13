@@ -1,2 +1,2 @@
 # Decolonizing shim - Render forced us to create this
-from Te_Po.core.main import app
+from te_po.core.main import app
