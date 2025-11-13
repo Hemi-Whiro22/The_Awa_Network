@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Compatibility layer re-exporting the core settings implementation."""
+"""
+Compatibility layer for old imports.
+Routes and older code import from `te_po.config`,
+so we forward everything from `te_po.core.config`.
+"""
 
-from __future__ import annotations
+from te_po.core.config import Settings, get_settings, settings
 
-from te_po.core.config import Settings, get_settings, get_settings_summary, settings
-
-__all__ = ["Settings", "get_settings", "get_settings_summary", "settings"]
+__all__ = ["Settings", "get_settings", "settings"]

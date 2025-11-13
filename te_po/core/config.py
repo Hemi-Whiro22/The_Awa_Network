@@ -1,54 +1,55 @@
-"""Pydantic settings wired to the secure environment loader."""
-
-from __future__ import annotations
-
-from functools import lru_cache
-from typing import Any, Dict, Optional
-
-from pydantic import Field
+from typing import Optional, Dict, Any
 from pydantic_settings import BaseSettings
+from pydantic import Field
+from functools import lru_cache
 
-from .env_loader import load_env
-
-_env_state = load_env()
+_env_state: Dict[str, Any] = {}
 
 
 class Settings(BaseSettings):
     """Application settings sourced from validated environment variables."""
 
+    # Supabase keys
     supabase_url: Optional[str] = Field(default=None, alias="DEN_URL")
-    supabase_service_role_key: Optional[str] = Field(default=None, alias="DEN_API_KEY")
-    supabase_anon_key: Optional[str] = Field(default=None, alias="TEPUNA_API_KEY")
-    supabase_publishable_key: Optional[str] = Field(default=None, alias="TEPUNA_URL")
+    supabase_service_role_key: Optional[str] = Field(
+        default=None, alias="DEN_API_KEY")
+    supabase_anon_key: Optional[str] = Field(
+        default=None, alias="TEPUNA_API_KEY")
+    supabase_publishable_key: Optional[str] = Field(
+        default=None, alias="TEPUNA_URL")
+    # OpenAI
     openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        allow_population_by_field_name = True
-
+    # Locale
     lang: str = "mi_NZ.UTF-8"
     lc_all: str = "mi_NZ.UTF-8"
 
+    # Flags + Tools
     offline_mode: bool = False
     database_url: Optional[str] = None
     memory_table: Optional[str] = None
 
-    # OpenAI models
+    # Models
     translation_model: str = "gpt-4o-mini"
     embedding_model: str = "text-embedding-3-small"
 
-    # OCR / tooling
-    tesseract_path: str | None = None
+    # OCR
+    tesseract_path: Optional[str] = None
 
-    # Supabase table aliases
+    # Supabase tables
     supabase_table_ocr_logs: str = "ocr_logs"
     supabase_table_translations: str = "translations"
     supabase_table_embeddings: str = "embeddings"
     supabase_table_memory: str = "ti_memory"
 
-    def summary(self) -> Dict[str, Any]:  # noqa: D401
-        """Return a masked snapshot of sensitive settings for diagnostics."""
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"        # <-- Important
+        populate_by_name = True
+
+    def summary(self) -> Dict[str, Any]:
+        """Return a masked snapshot of environment status."""
         return {
             "context": _env_state.get("context", "local"),
             "loaded_keys": _env_state.get("loaded_keys", []),
@@ -63,9 +64,5 @@ def get_settings() -> Settings:
     return Settings()
 
 
-def get_settings_summary() -> Dict[str, Any]:
-    """Expose the masked summary without instantiating a new settings object."""
-    return get_settings().summary()
-
-
+# global shared instance
 settings = get_settings()

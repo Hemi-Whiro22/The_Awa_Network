@@ -1,78 +1,151 @@
-# -*- coding: utf-8 -*-
-"""Render-ready FastAPI entrypoint with secure environment introspection."""
+import os
+import locale
+import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
-from __future__ import annotations
+# --- Environment / UTF-8 Setup ---
+from .env_loader import load_env, enforce_utf8_locale
+from .config import get_settings
 
-from datetime import datetime, timezone
+# --- Logging / Validation / Trace ---
+from te_po.utils.logger import log_info, log_warn, log_error
+from te_po.utils.env_validator import validate_environment
+from te_po.utils.mana_trace import trace_event, write_mana_trace
 
-from fastapi import FastAPI
 
-from te_po.core.config import get_settings, get_settings_summary
-from te_po.core.env_loader import load_env
-from te_po.routes import embed, memory, ocr, translate
+# --- Optional: Packwatch Handler ---
+try:
+    from te_po.services.carver.main import handle_packwatch
+    PACKWATCH_AVAILABLE = True
+except Exception:
+    PACKWATCH_AVAILABLE = False
+
+# --- Routers ---
+from te_po.routes import ocr, translate, embed, memory, iwi_portal
 from te_po.routes.tiwhanawhana import intake, mauri
-from te_po.routes import iwi_portal
-from te_po.utils.env_validator import validate_environment_and_locale
-from te_po.utils.logger import get_logger
-from te_po.utils.middleware.utf8_enforcer import apply_utf8_middleware
-from te_po.utils.safety_guard import safety_guard
-from contextlib import asynccontextmanager
 
-# Ensure secrets and locale are loaded before the application boots.
-_env_state = load_env()
-_ = get_settings()
-_logger = get_logger("core.main")
-_logger.info("Masked environment preview: %s", _env_state["masked_preview"])
-_logger.info("UTF-8 verified: %s", _env_state.get("utf8_verified"))
-_logger.info("Environment source precedence: %s", _env_state.get("source"))
+# ============================================================
+# 1. LOCALE + ENVIRONMENT BOOTSTRAP (EARLIEST POSSIBLE STEP)
+# ============================================================
 
-validation_results = validate_environment_and_locale()
+try:
+    locale.setlocale(locale.LC_ALL, "mi_NZ.UTF-8")
+except locale.Error:
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
-app = FastAPI(title="Tiwhanawhana Core Service", version="1.0.0")
-apply_utf8_middleware(app)
+os.environ["LANG"] = "mi_NZ.UTF-8"
+os.environ["LC_ALL"] = "mi_NZ.UTF-8"
 
-app.include_router(ocr.router, prefix="/ocr", tags=["OCR"])
-app.include_router(translate.router, prefix="/translate", tags=["Translate"])
-app.include_router(embed.router, prefix="/embed", tags=["Embed"])
-app.include_router(memory.router, prefix="/memory", tags=["Memory"])
-app.include_router(mauri.router, prefix="/mauri", tags=["Mauri"])
-app.include_router(iwi_portal.router, prefix="/iwi", tags=["Iwi Portal"])
-app.include_router(intake.router, tags=["Intake"])
+enforce_utf8_locale()
+load_env()
 
+settings = get_settings()
 
-@app.on_event("startup")
-async def startup_event() -> None:
-    summary = get_settings_summary()
-    _logger.info("Environment summary: %s", summary)
-    if validation_results["overall_ready"]:
-        _logger.info("Startup validation passed — UTF-8 enforced and secrets loaded.")
-    else:
-        _logger.warning("Startup validation reported warnings: %s", validation_results)
+# ============================================================
+# 2. FASTAPI APP DEFINITION
+# ============================================================
 
+app = FastAPI(
+    title="Tiwhanawhana",
+    description="Awakened backend of Kitenga / AwaNet",
+    version="0.4.0",
+)
 
-@app.get("/health")
-async def health_check() -> dict[str, str]:
-    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ============================================================
+# 3. ROUTERS
+# ============================================================
+
+app.include_router(ocr.router, prefix="/ocr")
+app.include_router(translate.router, prefix="/translate")
+app.include_router(embed.router, prefix="/embed")
+app.include_router(memory.router, prefix="/memory")
+app.include_router(mauri.router, prefix="/mauri")
+app.include_router(intake.router, prefix="/intake")
+app.include_router(iwi_portal.router, prefix="/iwi")
+
+# ============================================================
+# 4. KITENGA / PACKWATCH HOOK
+# ============================================================
+
 
 @app.post("/kitenga/hook")
-async def kitenga_hook(req: Request):
-    """Receives MCP prompts or internal messages from ChatGPT."""
-    payload = await req.json()
-    # Route to Packwatch handler or Supabase logger
-    response = await handle_packwatch(payload)
-    return response
+async def kitenga_hook(request: Request):
+    """Sandboxed endpoint for Packwatch + MCP signals from Kitenga."""
+    if not PACKWATCH_AVAILABLE:
+        log_warn("Packwatch not available – hook ignored.")
+        return {"status": "disabled"}
 
-@app.get("/env/health")
-async def env_health() -> dict[str, object]:
-    summary = get_settings_summary()
-    return {
-        "utf8_status": summary.get("utf8_status", {}),
-        "loaded_keys": summary.get("loaded_keys", []),
-        "source": summary.get("source", "system"),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    try:
+        payload = await request.json()
+        trace_event("kitenga_hook_received", payload)
+        response = await handle_packwatch(payload)
+        return {"status": "ok", "response": response}
+    except Exception as e:
+        log_error(f"Kitenga hook error: {e}")
+        return {"status": "error", "detail": str(e)}
+
+# ============================================================
+# 5. HEALTH ENDPOINTS
+# ============================================================
 
 
 @app.get("/")
-async def root() -> dict[str, str]:
-    return {"status": "awake", "message": "Tiwhanawhana core is flowing 🌊"}
+async def root():
+    return {"tiwhanawhana": "awake", "version": "0.4.0"}
+
+
+@app.get("/health")
+async def health():
+    return {"alive": True}
+
+
+@app.get("/env/health")
+async def env_health():
+    try:
+        validate_environment()
+        return {"status": "ok"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+# ============================================================
+# 6. STARTUP EVENTS
+# ============================================================
+
+
+@app.on_event("startup")
+async def on_startup():
+    log_info("Tiwhanawhana starting up…")
+
+    try:
+        validate_environment()
+        log_info("Environment validated ✓")
+    except Exception as e:
+        log_warn(f"Environment issue: {e}")
+
+    trace_event("startup", {"message": "Tiwhanawhana online"})
+
+    # Optional: Full whakapapa stamp
+    # write_mana_trace(agent_name="Tiwhanawhana")
+
+
+# ============================================================
+# 7. LOCAL DEV ENTRYPOINT
+# ============================================================
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "te_po.core.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )
