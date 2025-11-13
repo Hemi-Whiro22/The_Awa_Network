@@ -1,0 +1,247 @@
+.
+├── .devcontainer
+│   ├── Dockerfile
+│   └── devcontainer.json
+├── .dockerignore
+├── .gitignore
+├── .supabase
+│   ├── .temp
+│   │   ├── cli-latest
+│   │   ├── gotrue-version
+│   │   ├── pooler-url
+│   │   ├── postgres-version
+│   │   ├── project-ref
+│   │   ├── rest-version
+│   │   ├── storage-migration
+│   │   └── storage-version
+│   ├── currenttables.sql
+│   └── migrations
+│       ├── 20251104_tiwhanawhana_schema.sql
+│       └── 20251108_add_env_seals.sql
+├── .vscode
+│   └── settings.json
+├── ARCHITECTURE_DIAGRAM.md
+├── CHECKLIST.md
+├── CLARIFICATION.md
+├── COMMANDS.sh
+├── DEEP_SCAN_ANALYSIS.md
+├── DELIVERY.md
+├── DOCKER_DEPLOYMENT_FLOW.md
+├── INTAKE_SETUP_GUIDE.md
+├── INTEGRATION_SUMMARY.md
+├── IWI_PORTAL_GUIDE.md
+├── LICENSE
+├── ProjectManifest.yaml
+├── QUICK_REFERENCE.md
+├── README.md
+├── README_INTAKE.md
+├── RENDER_DEPLOY.md
+├── STAGES_EXPLAINED.md
+├── STRUCTURE_EXTENSION_SCAN.md
+├── SUPABASE_LINK.md
+├── TEPUNA_QUICK_REFERENCE.md
+├── TE_PUNA_MIGRATION_COMPLETE.md
+├── TE_PUNA_SCHEMA_REPORT.md
+├── awa_tree.txt
+├── backend
+│   ├── __init__.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   └── main.py
+│   └── requirements.txt -> ../Te_Po/requirements.txt
+├── chat.md
+├── check_tiwhanawhana_integrity.sh
+├── docker-compose.yaml
+├── documents
+│   ├── json
+│   │   ├── mcp.json
+│   │   └── state.json
+│   └── wd.md
+├── init.sh
+├── manifest.yaml
+├── mauri
+│   ├── README.txt
+│   ├── config.py
+│   ├── mauri.json
+│   ├── prompts
+│   │   ├── Respectful Scanner& Gaurdian.yaml
+│   │   ├── Truth.yaml
+│   │   ├── carving_orchestrator..yaml
+│   │   ├── env directive.yaml
+│   │   ├── enviroment_best_pratices.yaml
+│   │   ├── final_codex_alignment.yaml
+│   │   ├── manifest_controller.yaml
+│   │   ├── manifest_maintainer.yaml
+│   │   ├── render.yaml
+│   │   ├── reorgannize_tiwhanawhana.yaml
+│   │   ├── restore_paths.yaml
+│   │   └── verify_tiwhanawhana.yaml
+│   └── trace.json
+├── package-lock.json
+├── package.json
+├── pyproject.toml
+├── query_tables.py
+├── render.yaml
+├── run_tiwhanawhana.sh
+├── scripts
+│   ├── __init__.py
+│   ├── audit_encoding.py
+│   ├── dev_autostart.sh
+│   ├── export_to_supabase.py
+│   ├── init_env.sh
+│   ├── sanitize_utf8.py
+│   ├── scan_te_puna_schema.py
+│   ├── seed_pgvector.py
+│   ├── startup_cli.py
+│   ├── test_supabase.py
+│   └── test_supabase_dual.py
+├── services
+│   └── cli
+│       └── Dockerfile
+├── shared
+│   └── mauri
+│       └── mauri_stone.json
+├── start.sh
+├── structure.md
+├── supabase
+│   └── config.toml
+├── te_ao
+│   ├── Dockerfile
+│   ├── README.md
+│   ├── __init__.py
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   └── koru_spiral.svg
+│   │   ├── data
+│   │   │   └── public_schema_te_puna.json
+│   │   ├── hooks
+│   │   │   ├── useApi.js
+│   │   │   └── useIwiPortal.js
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   └── panels
+│   │       ├── ChatPanel.jsx
+│   │       ├── IwiPortalPanel.jsx
+│   │       ├── MemoryPanel.jsx
+│   │       ├── OCRPanel.jsx
+│   │       └── TranslatePanel.jsx
+│   ├── start_frontend.sh
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── te_po
+│   ├── Dockerfile
+│   ├── __init__.py
+│   ├── config.py
+│   ├── copilot.md
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── env_loader.py
+│   │   └── main.py
+│   ├── demo_validation.py
+│   ├── main.py
+│   ├── metadata.json
+│   ├── migration_suggestions.sql
+│   ├── models
+│   │   ├── __init__.py
+│   │   └── tiwhanawhana_models.py
+│   ├── patches
+│   │   ├── config_patch.yaml
+│   │   ├── core_service_render_patch.yaml
+│   │   ├── intake_async_fix.yaml
+│   │   ├── microservice_scaffolds_patch.yaml
+│   │   ├── render_yaml_patch.yaml
+│   │   ├── supabase_guard.yaml
+│   │   ├── supabase_schema_patch.yaml
+│   │   └── utf8_middleware_patch.yaml
+│   ├── render.yaml
+│   ├── requirements.txt
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── embed.py
+│   │   ├── iwi_portal.py
+│   │   ├── memory.py
+│   │   ├── ocr.py
+│   │   ├── tiwhanawhana
+│   │   │   ├── __init__.py
+│   │   │   ├── embed.py
+│   │   │   ├── intake.py
+│   │   │   ├── intake_bridge.py
+│   │   │   ├── mauri.py
+│   │   │   ├── memory.py
+│   │   │   ├── ocr.py
+│   │   │   └── translate.py
+│   │   └── translate.py
+│   ├── run_tests.sh
+│   ├── schema_drift_report.json
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── carver
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   ├── core
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   ├── embed
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   ├── intake
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   ├── mauri
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   ├── memory
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   ├── ocr
+│   │   │   ├── __init__.py
+│   │   │   └── main.py
+│   │   ├── ruru
+│   │   │   ├── Dockerfile
+│   │   │   ├── __init__.py
+│   │   │   ├── main.py
+│   │   │   ├── requirements.txt
+│   │   │   └── ruru.py
+│   │   ├── tiwhanawhana.py
+│   │   └── translate
+│   │       ├── __init__.py
+│   │       └── main.py
+│   ├── shared
+│   │   ├── __init__.py
+│   │   └── utils
+│   │       └── __init__.py
+│   ├── start_backend.sh
+│   ├── start_tiwhanawhana.sh
+│   ├── tests
+│   │   ├── __init__.py
+│   │   └── test_all_endpoints.py
+│   └── utils
+│       ├── __init__.py
+│       ├── alignment_verifier.py
+│       ├── carver.py
+│       ├── env_loader.py
+│       ├── env_validator.py
+│       ├── logger.py
+│       ├── mana_trace.py
+│       ├── mauri_loader.py
+│       ├── middleware
+│       │   ├── __init__.py
+│       │   └── utf8_enforcer.py
+│       ├── offline_store.py
+│       ├── openai_client.py
+│       ├── pgvector_client.py
+│       ├── safety_guard.py
+│       ├── supabase_client.py
+│       └── supabase_schema.py
+├── test_intake.sh
+├── tiwhanawhana
+│   └── __init__.py
+└── tohu_json
+
+46 directories, 199 files
